@@ -63,13 +63,15 @@ export async function migrateEsmImports(
     promises.push(
       limit(async () => {
         try {
-          await transformFile(path, {
+          const result = await transformFile(path, {
             dryRun: options.dryRun,
             resolverCache,
             tsConfigCache,
             verbose: options.verbose,
           });
-          filesSucceeded += 1;
+          if (result) {
+            filesSucceeded += 1;
+          }
         } catch (error) {
           console.error(
             `Failed to migrate ESM imports for ${path}: ${String(error)}`,

@@ -1,4 +1,11 @@
 import type { TsConfigResult } from 'get-tsconfig';
+import type {
+  ASTPath,
+  ExportAllDeclaration,
+  ExportDeclaration,
+  ExportNamedDeclaration,
+  ImportDeclaration,
+} from 'jscodeshift';
 
 import { createPathsMatcher, getTsconfig } from 'get-tsconfig';
 import jscodeshift from 'jscodeshift';
@@ -57,7 +64,7 @@ export function fixImportPath(
 
     const possiblePaths = [
       ...(pathsMatcher?.(specifier) ?? []),
-      ...(basePath ? path.join(basePath, specifier) : []),
+      ...(basePath ? [path.join(basePath, specifier)] : []),
     ];
 
     const suffix = possiblePaths
@@ -95,33 +102,49 @@ export async function transformFile(
   const tsConfig = getTsconfig(file, undefined, tsConfigCache);
 
   const root = jscodeshift(content);
-  let wasModified = false;
-  root
-    // eslint-disable-next-line unicorn/no-array-callback-reference
-    .find(jscodeshift.ImportDeclaration)
-    // eslint-disable-next-line unicorn/no-array-for-each
-    .forEach((path) => {
-      const specifier = path.node.source.value;
-      if (typeof specifier !== 'string') {
-        return;
-      }
-      const fixedPath = fixImportPath(
-        file,
-        specifier,
-        resolverCache,
-        tsConfig ?? undefined,
-      );
-      if (!fixedPath) {
-        return;
-      }
-      path.node.source.value = fixedPath;
-      wasModified = true;
-    });
+  let wasModified = false as boolean;
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  const fixDeclaration = (
+    path: ASTPath<
+      | ExportDeclaration
+      | ExportNamedDeclaration
+      | ExportAllDeclaration
+      | ImportDeclaration
+    >,
+  ): void => {
+    const specifier = path.node.source?.value;
+    if (!path.node.source) return;
+    if (typeof specifier !== 'string') {
+      return;
+    }
+    const fixedPath = fixImportPath(
+      file,
+      specifier,
+      resolverCache,
+      tsConfig ?? undefined,
+    );
+    if (!fixedPath) {
+      return;
+    }
+    path.node.source.value = fixedPath;
+    wasModified = true;
+  };
+
+  // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
+  root.find(jscodeshift.ExportDeclaration).forEach(fixDeclaration);
+
+  // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
+  root.find(jscodeshift.ExportNamedDeclaration).forEach(fixDeclaration);
+
+  // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
+  root.find(jscodeshift.ExportAllDeclaration).forEach(fixDeclaration);
+
+  // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
+  root.find(jscodeshift.ImportDeclaration).forEach(fixDeclaration);
+
   if (wasModified && !dryRun) {
     if (verbose) {
-      console.debug(`Writing changes to ${file}`);
+      console.debug(`Writing changes to ${file}...`);
     }
     await writeFile(
       file,

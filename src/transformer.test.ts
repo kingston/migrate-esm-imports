@@ -7,6 +7,9 @@ import { fixImportPath } from './transformer.js';
 
 // Mock fs.existsSync
 vi.mock('node:fs', () => ({
+  default: {
+    existsSync: vi.fn(),
+  },
   existsSync: vi.fn(),
 }));
 
