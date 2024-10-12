@@ -22,7 +22,7 @@ describe('fixImportPath', () => {
       compilerOptions: {
         baseUrl: './src',
         paths: {
-          '@utils/*': ['utils/*'],
+          '@utils/*': ['./utils/*'],
         },
       },
     },
@@ -114,6 +114,26 @@ describe('fixImportPath', () => {
       'vitest',
       resolverCache,
       tsConfig,
+    );
+    expect(result).toBeUndefined();
+  });
+
+  it('should not throw an error for module paths with tsConfig without base URL', () => {
+    fsExistsSyncMock.mockReturnValue(false);
+    const result = fixImportPath(
+      './root/src/file.ts',
+      'vitest',
+      resolverCache,
+      {
+        ...tsConfig,
+        config: {
+          ...tsConfig.config,
+          compilerOptions: {
+            ...tsConfig.config.compilerOptions,
+            baseUrl: undefined,
+          },
+        },
+      },
     );
     expect(result).toBeUndefined();
   });

@@ -65,11 +65,15 @@ export function fixImportPath(
       .map((p) => findSpecifierSuffix(p))
       .find((s) => s !== undefined);
 
+    const hasNonBaseUrlMatch =
+      matchingPaths.length === 1 &&
+      !matchingPaths[0]?.endsWith(`/${specifier}`);
+
     if (
       !suffix &&
+      matchingPaths.length > 0 &&
       // catch scenario where we default to baseUrl which could be a normal module
-      (matchingPaths.length !== 1 ||
-        !matchingPaths[0].endsWith(`/${specifier}`))
+      hasNonBaseUrlMatch
     ) {
       throw new Error(`Could not find valid extension for ${specifier}`);
     }
