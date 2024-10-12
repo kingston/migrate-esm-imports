@@ -100,4 +100,21 @@ describe('fixImportPath', () => {
       fixImportPath('/root/src/file.ts', './unknown', resolverCache),
     ).toThrow('Could not find valid extension for ./unknown');
   });
+
+  it('should not throw an error for module paths', () => {
+    fsExistsSyncMock.mockReturnValue(false);
+    const result = fixImportPath('./root/src/file.ts', 'vitest', resolverCache);
+    expect(result).toBeUndefined();
+  });
+
+  it('should not throw an error for module paths with tsConfig', () => {
+    fsExistsSyncMock.mockReturnValue(false);
+    const result = fixImportPath(
+      './root/src/file.ts',
+      'vitest',
+      resolverCache,
+      tsConfig,
+    );
+    expect(result).toBeUndefined();
+  });
 });

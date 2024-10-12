@@ -1,17 +1,26 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { readFile } from 'node:fs/promises';
 
 import type { MigrateEsmImportsOptions } from './types.js';
 
-import { description, name, version } from '../package.json';
 import { migrateEsmImports } from './index.js';
+
+const packageJson = await readFile(
+  new URL('../package.json', import.meta.url),
+  'utf8',
+);
+const { name, description, version } = JSON.parse(packageJson) as Record<
+  string,
+  string
+>;
 
 const program = new Command();
 program.name(name).description(description).version(version);
 
 program
-  .argument('[inputs...]', 'Input files or directories to process', 'src')
+  .argument('[inputs...]', 'Input files or directories to process', ['src'])
   // Option to ignore certain directories or files
   .option('-x,--exclude <patterns...>', 'Directories or files to exclude', [
     '.git',
@@ -41,4 +50,4 @@ program
 
 const options = program.opts<MigrateEsmImportsOptions>();
 
-await migrateEsmImports(program.args, options);
+await migrateEsmImports(program.processedArgs[0] as string[], options);

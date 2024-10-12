@@ -53,10 +53,11 @@ const importWithPathsIndexProject: TestProject = {
 import { foo } from '@src/utils';
 import { bar } from '@src/utils/bar';
 import test from 'base/test';
+import normalImport from 'vitest';
 
 console.log(foo);`,
     'src/utils/index.ts': `export const foo = 'foo';`,
-    'src/utils/bar.tsx': `export const bar = 'bar';`,
+    'src/utils/bar.tsx': `export const bar: string = 'bar';`,
     'src/base/test.ts': `export default 'test';`,
   },
   target: {
@@ -64,6 +65,7 @@ console.log(foo);`,
 import { foo } from '@src/utils/index.js';
 import { bar } from '@src/utils/bar.js';
 import test from 'base/test.js';
+import normalImport from 'vitest';
 
 console.log(foo);`,
   },
@@ -94,10 +96,11 @@ test.for([
   exportConversionProject,
 ])('works with $name project', async ({ source, target }) => {
   vol.fromJSON(source, '/root');
-  await migrateEsmImports(['src'], {
+  const success = await migrateEsmImports(['src'], {
     cwd: '/root',
     fs,
   });
+  expect(success).toBe(true);
   const result = vol.toJSON('/root', undefined, true);
   expect(result).toEqual({
     ...source,

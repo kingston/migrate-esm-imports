@@ -31,7 +31,7 @@ function findSpecifierSuffix(file: string): string | undefined {
 export function fixImportPath(
   filePath: string,
   specifier: string,
-  resolverCache: Map<string, string>,
+  resolverCache: Map<string, string | undefined>,
   tsConfig?: TsConfigResult,
 ): string | undefined {
   // if it's already been fixed we're done :)
@@ -59,27 +59,30 @@ export function fixImportPath(
       return resolverCache.get(resolverCacheKey);
     }
     const pathsMatcher = createPathsMatcher(tsConfig);
-    const baseUrl = tsConfig.config.compilerOptions?.baseUrl;
-    const basePath = baseUrl && path.join(path.dirname(tsConfig.path), baseUrl);
+    const matchingPaths = pathsMatcher?.(specifier) ?? [];
 
-    const possiblePaths = [
-      ...(pathsMatcher?.(specifier) ?? []),
-      ...(basePath ? [path.join(basePath, specifier)] : []),
-    ];
-
-    const suffix = possiblePaths
+    const suffix = matchingPaths
       .map((p) => findSpecifierSuffix(p))
       .find((s) => s !== undefined);
 
-    if (!suffix) {
+    if (
+      !suffix &&
+      // catch scenario where we default to baseUrl which could be a normal module
+      (matchingPaths.length !== 1 ||
+        !matchingPaths[0].endsWith(`/${specifier}`))
+    ) {
       throw new Error(`Could not find valid extension for ${specifier}`);
     }
 
-    const resolvedSpecifier = `${specifier}${suffix}`;
+    if (suffix) {
+      const resolvedSpecifier = `${specifier}${suffix}`;
 
-    resolverCache.set(resolverCacheKey, resolvedSpecifier);
+      resolverCache.set(resolverCacheKey, resolvedSpecifier);
 
-    return resolvedSpecifier;
+      return resolvedSpecifier;
+    } else {
+      resolverCache.set(resolverCacheKey, undefined);
+    }
   }
 
   // don't need to fix otherwise
@@ -90,7 +93,7 @@ interface TransformFileOptions {
   dryRun?: boolean;
   verbose?: boolean;
   tsConfigCache: Map<string, unknown>;
-  resolverCache: Map<string, string>;
+  resolverCache: Map<string, string | undefined>;
 }
 
 export async function transformFile(
@@ -101,7 +104,7 @@ export async function transformFile(
 
   const tsConfig = getTsconfig(file, undefined, tsConfigCache);
 
-  const root = jscodeshift(content);
+  const root = jscodeshift.withParser('tsx')(content);
   let wasModified = false as boolean;
 
   const fixDeclaration = (

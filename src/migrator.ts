@@ -11,18 +11,20 @@ import { transformFile } from './transformer.js';
 export async function migrateEsmImports(
   inputs: string[],
   options: MigrateEsmImportsOptions,
-): Promise<void> {
+): Promise<boolean> {
   const concurrency = options.concurrency ?? os.cpus().length;
 
   const limit = pLimit(concurrency);
   const promises: Promise<void>[] = [];
 
-  console.info(`Migrating ESM imports (${concurrency.toString()} threads)...`);
+  console.info(
+    `Migrating ESM imports for files in ${inputs.join(',')} (${concurrency.toString()} threads)...`,
+  );
 
   let filesSucceeded = 0;
   let filesFailed = 0;
 
-  const resolverCache = new Map<string, string>();
+  const resolverCache = new Map<string, string | undefined>();
   const tsConfigCache = new Map<string, unknown>();
 
   const resolvedInputs = inputs.map((input) => {
@@ -36,34 +38,36 @@ export async function migrateEsmImports(
     return input;
   });
 
-  for await (const path of globbyStream(resolvedInputs, {
+  const validExtensions = options.extensions ?? [
+    'js',
+    'jsx',
+    'ts',
+    'tsx',
+    'cjs',
+    'mjs',
+    'cts',
+    'mts',
+  ];
+
+  for await (const filePath of globbyStream(resolvedInputs, {
     cwd: options.cwd ?? process.cwd(),
-    expandDirectories: {
-      extensions: options.extensions ?? [
-        'js',
-        'jsx',
-        'ts',
-        'tsx',
-        'cjs',
-        'mjs',
-        'cts',
-        'mts',
-      ],
-    },
     onlyFiles: true,
     ignore: options.exclude,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
     fs: options.fs as any,
   })) {
-    if (typeof path !== 'string') {
+    if (typeof filePath !== 'string') {
       console.error(`Invalid path type: ${typeof path}`);
       filesFailed += 1;
+      continue;
+    }
+    if (!validExtensions.includes(path.extname(filePath).slice(1))) {
       continue;
     }
     promises.push(
       limit(async () => {
         try {
-          const result = await transformFile(path, {
+          const result = await transformFile(filePath, {
             dryRun: options.dryRun,
             resolverCache,
             tsConfigCache,
@@ -74,7 +78,7 @@ export async function migrateEsmImports(
           }
         } catch (error) {
           console.error(
-            `Failed to migrate ESM imports for ${path}: ${String(error)}`,
+            `Failed to migrate ESM imports for ${filePath}: ${String(error)}`,
           );
           filesFailed += 1;
         }
@@ -85,6 +89,8 @@ export async function migrateEsmImports(
   await Promise.allSettled(promises);
 
   console.info(
-    `Successfully migrated ESM imports for ${filesSucceeded.toString()} files. (${filesFailed.toString()} failed).`,
+    `Successfully migrated ESM imports for ${filesSucceeded.toString()} files. (${filesFailed.toString()} failed)`,
   );
+
+  return filesFailed === 0;
 }
