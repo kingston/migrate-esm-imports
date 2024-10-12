@@ -7,7 +7,7 @@ export default defineConfig({
     mockReset: true,
     server: {
       deps: {
-        inline: ['get-tsconfig'],
+        inline: ['get-tsconfig', 'globby', 'path-type'],
       },
     },
   },
