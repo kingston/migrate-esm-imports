@@ -27,10 +27,3 @@ jobs:
         run: pnpm lint
       - name: Check Code Formatting
         run: pnpm prettier:check
-
-      # If you have a monorepo, you can add the following steps to the job:
-
-      - name: Check Dependency Version Consistency
-        run: pnpm check-dependency-version-consistency .
-      - name: Check for Duplicated Dependencies
-        run: pnpm dedupe --check
