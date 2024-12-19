@@ -137,16 +137,16 @@ export async function transformFile(
     wasModified = true;
   };
 
-  // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
+  // eslint-disable-next-line unicorn/no-array-for-each
   root.find(jscodeshift.ExportDeclaration).forEach(fixDeclaration);
 
-  // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
+  // eslint-disable-next-line unicorn/no-array-for-each
   root.find(jscodeshift.ExportNamedDeclaration).forEach(fixDeclaration);
 
-  // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
+  // eslint-disable-next-line unicorn/no-array-for-each
   root.find(jscodeshift.ExportAllDeclaration).forEach(fixDeclaration);
 
-  // eslint-disable-next-line unicorn/no-array-for-each, unicorn/no-array-callback-reference
+  // eslint-disable-next-line unicorn/no-array-for-each
   root.find(jscodeshift.ImportDeclaration).forEach(fixDeclaration);
 
   if (wasModified && !dryRun) {
