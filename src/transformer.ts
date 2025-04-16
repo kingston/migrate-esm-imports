@@ -9,14 +9,15 @@ import type {
 
 import { createPathsMatcher, getTsconfig } from 'get-tsconfig';
 import jscodeshift from 'jscodeshift';
-import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+
+import { isFile } from './utils/fs.js';
 
 const POSSIBLE_EXTENSIONS = ['js', 'jsx', 'ts', 'tsx'];
 
 function findValidExtension(file: string): string | undefined {
-  return POSSIBLE_EXTENSIONS.find((ext) => existsSync(`${file}.${ext}`));
+  return POSSIBLE_EXTENSIONS.find((ext) => isFile(`${file}.${ext}`));
 }
 
 function findSpecifierSuffix(file: string): string | undefined {
@@ -44,6 +45,11 @@ export function fixImportPath(
   // check if relative path
   if (specifier.startsWith('.')) {
     const resolved = path.resolve(directory, specifier);
+
+    // if the file exists, we're done
+    if (isFile(resolved)) {
+      return;
+    }
 
     const suffix = findSpecifierSuffix(resolved);
     if (!suffix) {
