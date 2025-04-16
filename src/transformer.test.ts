@@ -1,19 +1,16 @@
 import type { TsConfigResult } from 'get-tsconfig';
 
-import { existsSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { fixImportPath } from './transformer.js';
+import { isFile } from './utils/fs.js';
 
 // Mock fs.existsSync
-vi.mock('node:fs', () => ({
-  default: {
-    existsSync: vi.fn(),
-  },
-  existsSync: vi.fn(),
+vi.mock('./utils/fs.js', () => ({
+  isFile: vi.fn(),
 }));
 
-const fsExistsSyncMock = vi.mocked(existsSync);
+const isFileMock = vi.mocked(isFile);
 
 describe('fixImportPath', () => {
   const tsConfig: TsConfigResult = {
@@ -35,7 +32,7 @@ describe('fixImportPath', () => {
   });
 
   it('should return undefined for already fixed paths', () => {
-    fsExistsSyncMock.mockReturnValue(true);
+    isFileMock.mockReturnValue(true);
     const result = fixImportPath(
       '/root/src/file.ts',
       './module.ts',
@@ -44,10 +41,18 @@ describe('fixImportPath', () => {
     expect(result).toBeUndefined();
   });
 
-  it('should fix relative paths with valid extensions', () => {
-    fsExistsSyncMock.mockImplementation(
-      (path) => path === '/root/src/module.ts',
+  it('should return undefined for existing paths such as .css', () => {
+    isFileMock.mockReturnValue(true);
+    const result = fixImportPath(
+      '/root/src/file.ts',
+      './module.css',
+      resolverCache,
     );
+    expect(result).toBeUndefined();
+  });
+
+  it('should fix relative paths with valid extensions', () => {
+    isFileMock.mockImplementation((path) => path === '/root/src/module.ts');
     const result = fixImportPath(
       '/root/src/file.ts',
       './module',
@@ -57,7 +62,7 @@ describe('fixImportPath', () => {
   });
 
   it('should fix relative paths with index files', () => {
-    fsExistsSyncMock.mockImplementation(
+    isFileMock.mockImplementation(
       (path) => path === '/root/src/module/index.ts',
     );
     const result = fixImportPath(
@@ -69,7 +74,7 @@ describe('fixImportPath', () => {
   });
 
   it('should fix paths based on tsconfig paths', () => {
-    fsExistsSyncMock.mockImplementation(
+    isFileMock.mockImplementation(
       (path) => path === '/root/src/utils/helper.ts',
     );
     const result = fixImportPath(
@@ -82,9 +87,7 @@ describe('fixImportPath', () => {
   });
 
   it('should fix paths based on tsconfig baseUrl', () => {
-    fsExistsSyncMock.mockImplementation(
-      (path) => path === '/root/src/helper.ts',
-    );
+    isFileMock.mockImplementation((path) => path === '/root/src/helper.ts');
     const result = fixImportPath(
       '/root/src/file.ts',
       'helper',
@@ -95,20 +98,20 @@ describe('fixImportPath', () => {
   });
 
   it('should throw an error for unresolved paths', () => {
-    fsExistsSyncMock.mockReturnValue(false);
+    isFileMock.mockReturnValue(false);
     expect(() =>
       fixImportPath('/root/src/file.ts', './unknown', resolverCache),
     ).toThrow('Could not find valid extension for ./unknown');
   });
 
   it('should not throw an error for module paths', () => {
-    fsExistsSyncMock.mockReturnValue(false);
+    isFileMock.mockReturnValue(false);
     const result = fixImportPath('./root/src/file.ts', 'vitest', resolverCache);
     expect(result).toBeUndefined();
   });
 
   it('should not throw an error for module paths with tsConfig', () => {
-    fsExistsSyncMock.mockReturnValue(false);
+    isFileMock.mockReturnValue(false);
     const result = fixImportPath(
       './root/src/file.ts',
       'vitest',
@@ -119,7 +122,7 @@ describe('fixImportPath', () => {
   });
 
   it('should not throw an error for module paths with tsConfig without base URL', () => {
-    fsExistsSyncMock.mockReturnValue(false);
+    isFileMock.mockReturnValue(false);
     const result = fixImportPath(
       './root/src/file.ts',
       'vitest',
