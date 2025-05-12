@@ -45,7 +45,7 @@
     "@tsconfig/node20": "20.1.5",
     "@types/jscodeshift": "0.12.0",
     "@types/node": "22.14.0",
-    "eslint": "9.23.0",
+    "eslint": "9.25.1",
     "memfs": "4.15.0",
     "prettier": "3.5.3",
     "tsx": "4.19.3",
