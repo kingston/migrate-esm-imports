@@ -1,0 +1,3 @@
+{
+  "extends": ["github>kingston/renovate-config"]
+}
