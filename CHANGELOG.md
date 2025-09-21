@@ -1,5 +1,11 @@
 # migrate-esm-imports
 
+## 0.1.2
+
+### Patch Changes
+
+- 0c5e530: Upgrade migrate-esm-import dependencies
+
 ## 0.1.1
 
 ### Patch Changes

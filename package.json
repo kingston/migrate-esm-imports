@@ -1,6 +1,6 @@
 {
   "name": "migrate-esm-imports",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Migrate CommonJS imports to ESM imports with extensions",
   "keywords": [],
   "repository": {
