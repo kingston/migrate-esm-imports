@@ -1,5 +1,5 @@
-min_version = "2025.8.14"
+min_version = "2026.03.17"
 
 [tools]
-node = "22.19.0"
-pnpm = "10.17.0"
+node = "24.15.0"
+pnpm = "10.33.2"
