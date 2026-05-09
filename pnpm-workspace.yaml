@@ -1,7 +1,8 @@
 ignoredBuiltDependencies:
+  - esbuild
   - unrs-resolver
 
-minimumReleaseAge: 1440
+minimumReleaseAge: 2880 # 2 days
 
 minimumReleaseAgeExclude:
   - '@ktam/*'

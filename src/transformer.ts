@@ -118,15 +118,15 @@ export async function transformFile(
   let wasModified = false as boolean;
 
   const fixDeclaration = (
-    path: ASTPath<
+    astPath: ASTPath<
       | ExportDeclaration
       | ExportNamedDeclaration
       | ExportAllDeclaration
       | ImportDeclaration
     >,
   ): void => {
-    const specifier = path.node.source?.value;
-    if (!path.node.source) return;
+    const specifier = astPath.node.source?.value;
+    if (!astPath.node.source) return;
     if (typeof specifier !== 'string') {
       return;
     }
@@ -139,7 +139,7 @@ export async function transformFile(
     if (!fixedPath) {
       return;
     }
-    path.node.source.value = fixedPath;
+    astPath.node.source.value = fixedPath;
     wasModified = true;
   };
 
