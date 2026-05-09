@@ -52,10 +52,10 @@
     "typescript": "5.8.2",
     "vitest": "3.2.4"
   },
-  "packageManager": "pnpm@10.17.0",
+  "packageManager": "pnpm@10.28.2",
   "engines": {
     "node": ">=20",
-    "pnpm": ">=9"
+    "pnpm": ">=10.28.2"
   },
   "publishConfig": {
     "access": "public",
