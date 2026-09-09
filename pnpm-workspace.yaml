@@ -6,6 +6,8 @@ minimumReleaseAge: 2880 # 2 days
 
 minimumReleaseAgeExclude:
   - '@ktam/*'
+  # Renovate security update: vitest@4.1.11
+  - vitest@4.1.11
 
 publishBranch: main
 
