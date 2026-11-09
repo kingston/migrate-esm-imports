@@ -44,7 +44,7 @@
     "@ktam/lint-node": "0.6.1",
     "@tsconfig/node24": "24.0.4",
     "@types/jscodeshift": "17.3.0",
-    "@types/node": "24.6.2",
+    "@types/node": "24.19.2",
     "eslint": "9.39.4",
     "memfs": "4.43.0",
     "prettier": "3.8.2",
