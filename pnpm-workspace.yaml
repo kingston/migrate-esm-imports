@@ -1,6 +1,6 @@
-ignoredBuiltDependencies:
-  - esbuild
-  - unrs-resolver
+allowBuilds:
+  esbuild: false
+  unrs-resolver: false
 
 minimumReleaseAge: 2880 # 2 days
 
